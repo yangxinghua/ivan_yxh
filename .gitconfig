@@ -1,0 +1,12 @@
+[user]
+	email = yxh.ivan@gmail.com
+	name = ivan
+[color]
+	ui = auto
+
+[alias]
+	st=status
+	co=checkout
+	br=branch
+	ci=commit
+	last=log -1 HEAD
