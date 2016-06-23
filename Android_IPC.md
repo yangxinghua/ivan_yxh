@@ -21,7 +21,7 @@
 ## Android中的IPC方式
 * 使用Bundle. 因为Bundle已经实现了Parcelable接口。
 * 使用文件共享。
-* 使用Messenger。其本质为AIDL
+* 使用Messenger。其本质为AIDL. [Demo](https://github.com/yangxinghua/messengerdemo)
 * 使用AIDL, 使用Binder. [Demo](https://github.com/yangxinghua/AIDLDemo)
 * 使用ContentProvider 其本质为Binder
 * 使用Socket。
