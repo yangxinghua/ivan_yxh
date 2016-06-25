@@ -20,3 +20,9 @@ parcelable类补全
 
 ## Android String.xml tools
 根据默认字符资源添加国际化字符资源
+
+## ADB idea
+* restart app
+* kill app
+* clear app data
+* uninstall app
