@@ -65,7 +65,7 @@ public RequestQueue(Cache cache, Network network, int threadPoolSize,
         }
     }
 ```
-首先，停止Cached和Network。接着创建一个新的CacheDispatcher， 这个一个Thread对象。看一下它的run()方法
+首先，停止Cached的线程和Network的多个线程。接着创建一个新的CacheDispatcher， 这是一个Thread对象。看一下它的run()方法
 ```
 @Override
  public void run() {
