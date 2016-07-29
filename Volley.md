@@ -167,14 +167,91 @@ public RequestQueue(Cache cache, Network network, int threadPoolSize,
 Ok，上面是Cache已经存在的情况下，那如果要从网络下载数据呢？
 在上面Cache不存在或者Cache过期的情况下，会把这个Request加入网络请求队列中。
 ``` mNetworkQueue.put(request); ```
-我们回来RequestQueue的构造方法中
+我们回来RequestQueue的start方法中
 ```
-public RequestQueue(Cache cache, Network network, int threadPoolSize,
-            ResponseDelivery delivery) {
-        mCache = cache;
-        mNetwork = network;
-        mDispatchers = new NetworkDispatcher[threadPoolSize];
-        mDelivery = delivery;
+public void start() {
+        stop();  // Make sure any currently running dispatchers are stopped.
+        // Create the cache dispatcher and start it.
+        mCacheDispatcher = new CacheDispatcher(mCacheQueue, mNetworkQueue, mCache, mDelivery);
+        mCacheDispatcher.start();
+
+        // Create network dispatchers (and corresponding threads) up to the pool size.
+        for (int i = 0; i < mDispatchers.length; i++) {
+            NetworkDispatcher networkDispatcher = new NetworkDispatcher(mNetworkQueue, mNetwork,
+                    mCache, mDelivery);
+            mDispatchers[i] = networkDispatcher;
+            networkDispatcher.start();
+        }
     }
 
 ```
+这里创建的4（private static final int DEFAULT_NETWORK_THREAD_POOL_SIZE = 4;）个NetworkDispatcher，该类继承Thread，并start（），看一下它的run()方法：
+```
+@Override
+public void run() {
+    Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
+    while (true) {
+        long startTimeMs = SystemClock.elapsedRealtime();
+        Request<?> request;
+        try {
+            // Take a request from the queue.
+            request = mQueue.take();
+        } catch (InterruptedException e) {
+            // We may have been interrupted because it was time to quit.
+            if (mQuit) {
+                return;
+            }
+            continue;
+        }
+
+        try {
+            request.addMarker("network-queue-take");
+
+            // If the request was cancelled already, do not perform the
+            // network request.
+            if (request.isCanceled()) {
+                request.finish("network-discard-cancelled");
+                continue;
+            }
+
+            addTrafficStatsTag(request);
+
+            // Perform the network request.
+            NetworkResponse networkResponse = mNetwork.performRequest(request);
+            request.addMarker("network-http-complete");
+
+            // If the server returned 304 AND we delivered a response already,
+            // we're done -- don't deliver a second identical response.
+            if (networkResponse.notModified && request.hasHadResponseDelivered()) {
+                request.finish("not-modified");
+                continue;
+            }
+
+            // Parse the response here on the worker thread.
+            Response<?> response = request.parseNetworkResponse(networkResponse);
+            request.addMarker("network-parse-complete");
+
+            // Write to cache if applicable.
+            // TODO: Only update cache metadata instead of entire record for 304s.
+            if (request.shouldCache() && response.cacheEntry != null) {
+                mCache.put(request.getCacheKey(), response.cacheEntry);
+                request.addMarker("network-cache-written");
+            }
+
+            // Post the response back.
+            request.markDelivered();
+            mDelivery.postResponse(request, response);
+        } catch (VolleyError volleyError) {
+            volleyError.setNetworkTimeMs(SystemClock.elapsedRealtime() - startTimeMs);
+            parseAndDeliverNetworkError(request, volleyError);
+        } catch (Exception e) {
+            VolleyLog.e(e, "Unhandled exception %s", e.toString());
+            VolleyError volleyError = new VolleyError(e);
+            volleyError.setNetworkTimeMs(SystemClock.elapsedRealtime() - startTimeMs);
+            mDelivery.postError(request, volleyError);
+        }
+    }
+}
+
+```
+先不要急着WTF，一句话就可以说明这一大坨东西做了什么：从网络下载数据并调用Request的解析方法然后告诉Request：我做完了。跟上面从cache是一样一样的。
