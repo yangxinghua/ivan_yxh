@@ -22,8 +22,7 @@ public PackageManager getPackageManager() {
 
 ```
 从``` new ApplicationPackageManager() ``` 我们知道获取到的PackageManager其实是
-ApplicationPackageManager实例
-接着我们来看看 ActivtyThread.getPackageManager()
+ApplicationPackageManager实例.接着我们来看看 ActivtyThread.getPackageManager()
 
 ```
 public static IPackageManager getPackageManager() {
@@ -39,8 +38,8 @@ public static IPackageManager getPackageManager() {
     }
 
 ```
-通过ServiceManager.getService()查询到package服务返回Binder接口,通过Binder来得到PackageManager
-实例.这个IPackageManager的实现是哪个类? -->PackageManagerService.它实现了IPackageManager.Stub
+通过ServiceManager.getService()查询到package服务返回Binder接口,通过Binder来得到IPackageManager
+远程接口.这个IPackageManager的实现是哪个类? -->PackageManagerService.它实现了IPackageManager.Stub
 (附一个AIDL的DEMO, 来自Android开发艺术探索 [AIDL](git@github.com:yangxinghua/AIDLDemo.git))
 在PackageManagerService中保存了已经安装的应用的各种信息,包括版本号,Activity,Service,
 Receiver,ContentProvider,最后升级时间,安装时间等等.这些信息,是在PackageParse的parseBaseApk()方法中解析AndroidManifest文件得到的.
