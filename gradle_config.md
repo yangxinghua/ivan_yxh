@@ -53,5 +53,5 @@ productFlavors {
 ## apk名称加上版本号
 我们生成的apk的时候,名称最好是加上版本号.对此,我们可以在gradle中加上如下配置.
 defaultConfig {
-    setProperty("archivesBaseName", "iMCO_$versionName")
+    setProperty("archivesBaseName", "basename_$versionName")
 }
