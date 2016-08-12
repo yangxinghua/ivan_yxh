@@ -56,7 +56,7 @@ public void show() {
     }
 }
 ```
-先判断mNextView,就是Toast的布局是否为空,如果是,直接抛出异常.那么先来看看getService()做了什么.
+先判断mNextView,就是Toast的布局是否为空,如果是,直接抛出异常.接着来看看getService()做了什么.
 ```
 static private INotificationManager getService() {
     if (sService != null) {
@@ -66,7 +66,7 @@ static private INotificationManager getService() {
     return sService;
 }
 ```
-获取远程接口,实现类是NotificationManagerService. 那么,来看看这个服务中的enqueueToast()
+获取远程接口,实现类是NotificationManagerService.来看看这个服务中的enqueueToast()
 方法.
 
 ```
@@ -198,4 +198,4 @@ public void handleShow() {
     }
 }
 ```
-到这里,Toast的layout就通过WindowManager加入到window中了
+到``` mWM.addView(mView, mParams);```,Toast就显示出来了.
