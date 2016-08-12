@@ -34,6 +34,8 @@ public static RequestQueue newRequestQueue(Context context, HttpStack stack) {
 ```
 获取Cache目录
 ``` File cacheDir = new File(context.getCacheDir(), DEFAULT_CACHE_DIR); ```
+这个目录的路径是/data/data/packagename/volley
+
 
 根据SDK版本来决定使用HttpUrlConnection还是HttpClient。接着就是真正的创建RequestQueue.
 看一下RequestQueue的构造方法
@@ -150,7 +152,7 @@ public RequestQueue(Cache cache, Network network, int threadPoolSize,
 
 ```
 这里有一个死循环，就是不断从队列中拉取Request，如果Request已经被取消，则继续拉取下一个Request。
-首先从Cache中查找是否有这个entry，如果没有或者Cache过期了，则把这个Request加入到网络下载队列中。
+首先从Cache中查找是否有这个entry，如果没有或者entry过期了，则把这个Request加入到网络下载队列中。
 如果查找到了Cache，直接调用Request的数据解析方法解析数据，并通过调用Request的deliverResponse()
 将解析数据返回。
 
