@@ -122,3 +122,9 @@ private Response getResponseWithInterceptorChain() throws IOException {
    return chain.proceed(originalRequest);
  }
 ```
+在上面的方法中，加入了一堆的拦截器，按照一下顺序来拦截:
+1. RetryAndFollowUpInterceptor:创建连接池，路由表。如果Response code无法识别，进行重试。
+1. Bridgeinterceptor:构建http请求头部。进入下一个拦截器。
+2. CacheInterceptor:根据http请求消息查找缓存。如果没有，进入下一个拦截器。
+3. ConnectInterceptor:建立链接，进入下一个拦截器。
+4. CallServerInterceptor:构建http请求行以及http请求体，向服务器发送请求，并返回Response。
