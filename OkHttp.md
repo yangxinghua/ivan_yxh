@@ -128,3 +128,46 @@ private Response getResponseWithInterceptorChain() throws IOException {
 2. CacheInterceptor:根据http请求消息查找缓存。如果没有，进入下一个拦截器。
 3. ConnectInterceptor:建立链接，进入下一个拦截器。
 4. CallServerInterceptor:构建http请求行以及http请求体，向服务器发送请求，并返回Response。
+
+当这个任务执行完后，在AsyncCall的finally中会通知client自己完成了。
+```
+} finally {
+  client.dispatcher().finished(this);
+}
+```
+最终会调到Dispatcher的以下finish方法
+```
+private <T> void finished(Deque<T> calls, T call, boolean promoteCalls) {
+  int runningCallsCount;
+  Runnable idleCallback;
+  synchronized (this) {
+    if (!calls.remove(call)) throw new AssertionError("Call wasn't in-flight!");
+    if (promoteCalls) promoteCalls();
+    runningCallsCount = runningCallsCount();
+    idleCallback = this.idleCallback;
+  }
+
+  if (runningCallsCount == 0 && idleCallback != null) {
+    idleCallback.run();
+  }
+}
+```
+这里的promoteCalls就会从队列中取出下一个任务并执行
+```
+private void promoteCalls() {
+    if (runningAsyncCalls.size() >= maxRequests) return; // Already running max capacity.
+    if (readyAsyncCalls.isEmpty()) return; // No ready calls to promote.
+
+    for (Iterator<AsyncCall> i = readyAsyncCalls.iterator(); i.hasNext(); ) {
+      AsyncCall call = i.next();
+
+      if (runningCallsForHost(call) < maxRequestsPerHost) {
+        i.remove();
+        runningAsyncCalls.add(call);
+        executorService().execute(call);
+      }
+
+      if (runningAsyncCalls.size() >= maxRequests) return; // Reached max capacity.
+    }
+  }
+```
