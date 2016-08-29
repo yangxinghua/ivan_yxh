@@ -22,6 +22,7 @@ private void download(String url) {
     });
 }
 ```
+## 源码
 
 OkHttpClient的构造方法里面调用了默认的建造者来对属性赋值.接着同样的使用建造者来构建了一个Request
 看一下这个Request的Builder的构造方法.这里的默认连接方式是GET.
@@ -123,11 +124,14 @@ private Response getResponseWithInterceptorChain() throws IOException {
  }
 ```
 在上面的方法中，加入了一堆的拦截器，按照一下顺序来拦截:
-1. RetryAndFollowUpInterceptor:创建连接池，路由表。如果Response code无法识别，进行重试。
-1. Bridgeinterceptor:构建http请求头部。进入下一个拦截器。
-2. CacheInterceptor:根据http请求消息查找缓存。如果没有，进入下一个拦截器。
-3. ConnectInterceptor:建立链接，进入下一个拦截器。
-4. CallServerInterceptor:构建http请求行以及http请求体，向服务器发送请求，并返回Response。
+1. 首先是用户添加的拦截器。这里没有添加。
+2. RetryAndFollowUpInterceptor:创建连接池，路由表。如果Response code无法识别，进行重试。
+3. Bridgeinterceptor:构建http请求头部。进入下一个拦截器。
+4. CacheInterceptor:根据http请求消息查找缓存。如果没有，进入下一个拦截器。
+5. ConnectInterceptor:建立链接，进入下一个拦截器。
+6. CallServerInterceptor:构建http请求行以及http请求体，向服务器发送请求，并返回Response。
+当请求到数据之后，层层返回，在CacheInterceptor会缓存这个Response。
+
 
 当这个任务执行完后，在AsyncCall的finally中会通知client自己完成了。
 ```
