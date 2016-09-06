@@ -80,4 +80,8 @@ public class MainActivity extends AppCompatActivity {
         return null;
     }
 ```
+因为threadHandler是使用HandlerThread的Looper来构造的,该Looper的loop方法是运行在HandlerThread创建的线程中.从消息队列中取出消息是运行在该线程中,自然的,threadHandler的handleMessage方法也是运行在该线程中.
+
+而mHandler是在主线程中创建的,由于是一个无参的构造方法,默认获取的是当前线程的Looper.所以mHandler的handleMessage是运行在主线程中.
+
 顺便说一下,IntentService内部实现也是HandlerThread.
