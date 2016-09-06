@@ -80,3 +80,4 @@ public class MainActivity extends AppCompatActivity {
         return null;
     }
 ```
+顺便说一下,IntentService内部实现也是HandlerThread.
