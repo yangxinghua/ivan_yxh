@@ -34,3 +34,7 @@ ANR, 即Application Not Responding.程序会弹出对话框来提示用户. 发�
 I/art: Thread[2,tid=24154,WaitingInMainSignalCatcherLoop,Thread*=0xae602000,peer=0x2ac0a100,"Signal Catcher"]: reacting to signal 3
 I/art: Wrote stack traces to '/data/anr/traces.txt'
 ```
+traces.txt的信息如下
+```
+
+```

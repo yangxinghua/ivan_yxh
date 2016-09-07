@@ -32,10 +32,8 @@ public static RequestQueue newRequestQueue(Context context, HttpStack stack) {
         return queue;
     }
 ```
-获取Cache目录
-``` File cacheDir = new File(context.getCacheDir(), DEFAULT_CACHE_DIR); ```
+获取Cache目录` File cacheDir = new File(context.getCacheDir(), DEFAULT_CACHE_DIR); `
 这个目录的路径是/data/data/packagename/volley
-
 
 根据SDK版本来决定使用HttpUrlConnection还是HttpClient。接着就是真正的创建RequestQueue.
 看一下RequestQueue的构造方法
@@ -153,8 +151,8 @@ public RequestQueue(Cache cache, Network network, int threadPoolSize,
 ```
 这里有一个死循环，就是不断从队列中拉取Request，如果Request已经被取消，则继续拉取下一个Request。
 首先从Cache中查找是否有这个entry，如果没有或者entry过期了，则把这个Request加入到网络下载队列中。
-如果查找到了Cache，直接调用Request的数据解析方法解析数据，并通过调用Request的deliverResponse()
-将解析数据返回。
+如果查找到了Cache，判断是否需要刷新,如果不需要,直接调用Request的数据解析方法解析数据，并通过调用Request的deliverResponse(), 将解析数据返回。如果需要刷新,先将Cache返回,然后将这个Request加入到下载队列中.
+
 
 ```
 // Deliver a normal response or error, depending.
@@ -167,8 +165,18 @@ public RequestQueue(Cache cache, Network network, int threadPoolSize,
 ```
 
 Ok，上面是Cache已经存在的情况下，那如果要从网络下载数据呢？
-在上面Cache不存在或者Cache过期的情况下，会把这个Request加入网络请求队列中。
-``` mNetworkQueue.put(request); ```
+
+
+上面的几个步骤:
+1. 是否被取消,取消从头开始.
+2. 是否有缓存,没有则直接加入下载队列.从头开始.
+3. 缓存是否过期,是则加入下载队列,从头开始.
+4. 缓存是否需要刷新,否直接交付,是则先交付,并加入请求队列.
+
+
+
+
+在上面Cache不存在或者Cache过期的情况下，会把这个Request加入网络请求队列中.那网络请求是在哪里?
 我们回来RequestQueue的start方法中
 ```
 public void start() {
@@ -187,7 +195,7 @@ public void start() {
     }
 
 ```
-这里创建的4（private static final int DEFAULT_NETWORK_THREAD_POOL_SIZE = 4;）个NetworkDispatcher，该类继承Thread，并start（），看一下它的run()方法：
+这里创建的4（private static final int DEFAULT_NETWORK_THREAD_POOL_SIZE = 4;）个NetworkDispatcher，该类继承Thread，看一下它的run()方法：
 ```
 @Override
 public void run() {
@@ -256,4 +264,66 @@ public void run() {
 }
 
 ```
-先不要急着WTF，一句话就可以说明这一大坨东西做了什么：从网络下载数据并调用Request的解析方法然后告诉Request：我做完了。跟上面从cache获取数据是一样一样的。
+先不要急着WTF，一句话就可以说明这一大坨东西做了什么：从网络下载数据,如果需要缓存则进行缓存,然后调用Request的解析方法然后告诉Request：我做完了。跟上面从cache获取数据是一样一样的。
+其中`NetworkResponse networkResponse = mNetwork.performRequest(request);`
+这一句就是从网络上下载数据:
+```
+@Override
+   public NetworkResponse performRequest(Request<?> request) throws VolleyError {
+       long requestStart = SystemClock.elapsedRealtime();
+       //省略代码
+       ......
+       httpResponse = mHttpStack.performRequest(request, headers);
+       //省略代码
+       ......
+       return new NetworkResponse(statusCode, responseContents, responseHeaders, false,SystemClock.elapsedRealtime() - requestStart);
+      ......
+   }
+```
+上面省略较多代码,核心只有这两句.就是下载数据,返回respons.然后看下HttpURLConnection的下载方式:
+```
+@Override
+public HttpResponse performRequest(Request<?> request, Map<String, String> additionalHeaders)
+        throws IOException, AuthFailureError {
+    String url = request.getUrl();
+    HashMap<String, String> map = new HashMap<String, String>();
+    map.putAll(request.getHeaders());
+    map.putAll(additionalHeaders);
+    if (mUrlRewriter != null) {
+        String rewritten = mUrlRewriter.rewriteUrl(url);
+        if (rewritten == null) {
+            throw new IOException("URL blocked by rewriter: " + url);
+        }
+        url = rewritten;
+    }
+    URL parsedUrl = new URL(url);
+    HttpURLConnection connection = openConnection(parsedUrl, request);
+    for (String headerName : map.keySet()) {
+        connection.addRequestProperty(headerName, map.get(headerName));
+    }
+    setConnectionParametersForRequest(connection, request);
+    // Initialize HttpResponse with data from the HttpURLConnection.
+    ProtocolVersion protocolVersion = new ProtocolVersion("HTTP", 1, 1);
+    int responseCode = connection.getResponseCode();
+    if (responseCode == -1) {
+        // -1 is returned by getResponseCode() if the response code could not be retrieved.
+        // Signal to the caller that something was wrong with the connection.
+        throw new IOException("Could not retrieve response code from HttpUrlConnection.");
+    }
+    StatusLine responseStatus = new BasicStatusLine(protocolVersion,
+            connection.getResponseCode(), connection.getResponseMessage());
+    BasicHttpResponse response = new BasicHttpResponse(responseStatus);
+    if (hasResponseBody(request.getMethod(), responseStatus.getStatusCode())) {
+        response.setEntity(entityFromConnection(connection));
+    }
+    for (Entry<String, List<String>> header : connection.getHeaderFields().entrySet()) {
+        if (header.getKey() != null) {
+            Header h = new BasicHeader(header.getKey(), header.getValue().get(0));
+            response.addHeader(h);
+        }
+    }
+    return response;
+}
+
+```
+这里就是常规的使用HttpURLConnection使用了.
