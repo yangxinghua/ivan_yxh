@@ -5,10 +5,10 @@ echo "done"
 
 # Add ~/.jenv/bin to your $PATH for access to the jenv command-line utility.
 echo "config jenv to path"
-echo 'export PATH="$HOME/.jenv/bin:$PATH"' >> ~/.profile
+echo 'export PATH="$HOME/.jenv/bin:$PATH"' >> ~/.bash_profile
 
 # Add jenv init to your shell to enable shims and autocompletion.
-echo 'eval "$(jenv init -)"' >> ~/.profile
+echo 'eval "$(jenv init -)"' >> ~/.bash_profile
 
 # restart shell
 exec $SHELL -l
