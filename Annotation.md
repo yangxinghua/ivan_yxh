@@ -1,13 +1,10 @@
-# 注解
-用来描述数据的数据，很拗口是吧。说人话就是：我是A（注解）， 我的作用是用来描述*的，额，换个说法：我的作用是用来描述一个数据的。比如
-```
-@Get(age = 20, name = "xiaoming")
-Person person;
+---
+title: 拆ButterKnife学习注解
+date: 2017-2-8
+tag: Android
+---
+# 简介
+在Android开发中，相信只要是个老司机，都会使用ButterKnife，从而避免如搬砖般的写着findViewById。
+通过使用ButterKnife提供的注解，帮我们去获取到每一个View。下面就通过拆ButterKnife来学习注解。
 
-
-public class User {
-    private String name;
-    private int age;
-}
-```
-好吧，小明叕躺枪。继续用人话来说就是：上述的Get注解描述了Persion类的age属性,name属性的值。然而(有这个词一般都没什么好事)，这需要一个解释器来解释。
+# ButterKnife使用

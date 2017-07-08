@@ -1,3 +1,9 @@
+---
+title: setContentView
+date: 2016-10-23
+tag: Android
+---
+
 ## Activity.setContentView(int layoutResID)
 最终会通过调用到PhoneWindow的setContentView(int layoutResID)
 
