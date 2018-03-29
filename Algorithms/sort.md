@@ -1,4 +1,5 @@
 # 选择排序
+```
 private void selectSort() {
     int[] array = {4,7,2,6,5,9,0,1};
 
@@ -14,9 +15,11 @@ private void selectSort() {
         }
     }
 }
+```
 
 
 # 冒泡排序
+```
 public void bubbleSort() {
   int[] array = {4,7,2,6,5,9,0,1};
   for(int j=0; j<array.length; j++) {
@@ -29,8 +32,10 @@ public void bubbleSort() {
     }
   }
 }
+```
 
 # 快速排序
+```
 public void quickSort() {
   int nums = {6,3,2,4,1,9,5,7,8};
   int pivotPos = partition(nums, 0, nums.length -1);
@@ -61,3 +66,4 @@ public void swap(int[] arr, int left, int right) {
     arr[left] = arr[right];
     arr[right] = temp;
 }
+```
