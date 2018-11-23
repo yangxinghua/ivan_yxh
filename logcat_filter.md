@@ -1,3 +1,4 @@
+```
 # 把此代码加入到.bashrc
 # 作用：能够通过进程名显示log
 # 用法：alogcat com.android.calendar or alogcat calendar
@@ -8,3 +9,4 @@ function alogcat() {
     # 当进程异常退出，log是通过 AndroidRuntime 输出的
     adb logcat -v time  |grep -E "$OUT|AndroidRuntime"
 }
+```
