@@ -1,5 +1,4 @@
 ```
-# 把此代码加入到.bashrc
 # 作用：能够通过进程名显示log
 # 用法：alogcat com.android.calendar or alogcat calendar
 # 当监控的进程异常退出时，需要重新运行此命令
